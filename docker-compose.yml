@@ -1,0 +1,25 @@
+services:
+  ### MySQL DB와 계정은 아래 dev 외에는 직접 생성 필요
+  # hauth 계정과 hauth DB
+  # webinar 계정과 webinar DB
+  mysql:
+    image: mysql:5.7
+    container_name: dev-mysql
+    restart: always
+    ports:
+      - 10310:3306
+    environment:
+      TZ: Asia/Seoul
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: dev
+      MYSQL_USER: dev
+      MYSQL_PASSWORD: dev
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --skip-character-set-client-handshake
+    volumes:
+      - dev-mysql:/var/lib/mysql
+
+volumes:
+  dev-mysql:
