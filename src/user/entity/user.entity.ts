@@ -45,4 +45,12 @@ export class User {
       throw new InternalServerErrorException();
     }
   }
+
+  async checkPassword(inputPassword: string): Promise<boolean> {
+    try {
+      return await bcrypt.compare(inputPassword, this.password);
+    } catch (error) {
+      throw new InternalServerErrorException();
+    }
+  }
 }

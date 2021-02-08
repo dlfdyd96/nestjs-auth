@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import * as Joi from 'joi';
 import { User } from './user/entity/user.entity';
+import { JwtModule } from './jwt/jwt.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { User } from './user/entity/user.entity';
         MYSQL_USERNAME: Joi.string().required(),
         MYSQL_PASSWORD: Joi.string().required(),
         MYSQL_DATABASE: Joi.string().required(),
+        PRIVATE_KEY: Joi.string().required(),
       }),
     }),
     TypeOrmModule.forRoot({
@@ -35,6 +37,9 @@ import { User } from './user/entity/user.entity';
       timezone: '+09:00',
     }),
     UserModule,
+    JwtModule.forRoot({
+      privateKey: process.env.PRIVATE_KEY,
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],

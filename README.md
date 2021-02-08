@@ -375,12 +375,10 @@ export class UserController {
 ### NestJS Auth
 
 1. install Package
-   TODO:
-
-   ```sh
-   $ npm install --save jsonwebtoken
-   $ npm i --save-dev @types/jsonwebtoken
-   ```
+  ```sh
+  $ npm install --save jsonwebtoken
+  $ npm i --save-dev @types/jsonwebtoken
+  ```
 
 2. Auth Module
    TODO:
