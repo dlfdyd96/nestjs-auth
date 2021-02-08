@@ -95,6 +95,8 @@ $ npm i @nestjs/typeorm typeorm mysql2
 - 환경변수
 
 ```env
+NODE_PORT=3000
+
 MYSQL_HOST=127.0.0.1
 MYSQL_PORT=10310
 MYSQL_USERNAME=ilyong

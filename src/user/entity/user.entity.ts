@@ -6,6 +6,7 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  VersionColumn,
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { InternalServerErrorException } from '@nestjs/common';
@@ -20,6 +21,9 @@ export class User {
   @Column()
   password: string;
 
+  @Column({ nullable: true })
+  avatar: string;
+
   @CreateDateColumn()
   createdAt: Date;
 
@@ -29,7 +33,7 @@ export class User {
   @DeleteDateColumn()
   deletedAt: Date;
 
-  @Column()
+  @VersionColumn()
   version: string;
 
   @BeforeInsert()
