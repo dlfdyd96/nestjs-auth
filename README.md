@@ -140,6 +140,9 @@ export class User {
   @Column()
   password: string;
 
+  @Column()
+  avatar: string;
+
   @CreateDateColumn()
   createdAt: Date;
 
@@ -261,7 +264,113 @@ export class User {
 ```
 
 3. UserController - Sign up (회원가입)
-   TODO:
+회원가입을 위한 작업을 해봅시다.
+- 먼저 DTO를 만들어 봅시다.
+```ts
+// src/common/common.dto.ts
+
+export class CommonResponseDto {
+  status: number;
+  error?: string;
+}
+
+
+// src/user/dtos/create-user.dto.ts
+
+import { IsEmail, IsOptional, IsString } from 'class-validator';
+import { CommonResponseDto } from 'src/common/common.dto';
+
+export class CreateUserRequestDto {
+  @IsEmail()
+  username: string;
+
+  @IsString()
+  password: string;
+
+  @IsOptional()
+  @IsString()
+  avatar = '';
+}
+
+export class CreateUserResponseDto extends CommonResponseDto {}
+```
+- 다음으로 `UserService`를 만들어 봅시다.
+```ts
+
+@Injectable()
+export class UserService {
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) {}
+
+  async signInUser(data: CreateUserRequestDto) {
+    try {
+      const exist = await this.userRepository.findOne({
+        username: data.username,
+      });
+      if (exist)
+        throw new BadRequestException({
+          message: `이미 존재하는 사용자입니다.`,
+        });
+
+      const user = await this.userRepository.create(data);
+      await this.userRepository.save(user);
+      return {
+        status: 201,
+      };
+    } catch (error) {
+      console.log(error);
+      return {
+        status: error.status,
+        error: error.message,
+      };
+    }
+  }
+}
+```
+
+- 다음으로 `UserController`를 만들어 봅시다.
+```ts
+import { Body, Controller, Post } from '@nestjs/common';
+import {
+  CreateUserRequestDto,
+  CreateUserResponseDto,
+} from './dtos/create-user.dto';
+import { UserService } from './user.service';
+
+@Controller('users')
+export class UserController {
+  constructor(private readonly userService: UserService) {}
+  @Post()
+  signIn(@Body() data: CreateUserRequestDto): Promise<CreateUserResponseDto> {
+    return this.userService.signInUser(data);
+  }
+}
+```
+
+4. Test
+```json
+// [POST] localhost:3000/users
+// Request Body
+{
+  "username": "1yongs3_@naver.com",
+  "password": "test",
+  "avatar":"testavatar"
+}
+
+// response
+// success
+{
+  "status": 201
+}
+// error
+{
+ "statusCode": 40x,
+ "message": ["이미 존재하는 사용자입니다."],
+ "error": "Bad Request"
+}
+```
 
 ### NestJS Auth
 

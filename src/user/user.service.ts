@@ -18,19 +18,20 @@ export class UserService {
       });
       if (exist)
         throw new BadRequestException({
-          message: `이미 존재하는 사용자입니다.`,
+          message: [`이미 존재하는 사용자입니다.`],
+          error: 'Bad Request',
         });
 
       const user = await this.userRepository.create(data);
       await this.userRepository.save(user);
       return {
-        status: 201,
+        statusCode: 201,
       };
     } catch (error) {
-      console.log(error);
+      console.log(error.response);
       return {
-        status: error.status,
-        error: error.message,
+        statusCode: error.status,
+        ...error.response,
       };
     }
   }

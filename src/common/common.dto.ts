@@ -1,4 +1,5 @@
 export class CommonResponseDto {
-  status: number;
+  statusCode: number;
+  message?: string[];
   error?: string;
 }
