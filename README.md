@@ -232,7 +232,7 @@ $ npm i --save-dev @types/bcrypt
 
 2. User Entity
 
-   [TypeORM - Listeners and Subscribers](https://typeorm.io/#/listeners-and-subscribers/beforeinsert) 를 참고하시면
+   [TypeORM - Listeners and Subscribers](https://typeorm.io/#/listeners-and-subscribers/beforeinsert) 를 참고하시면 TypeORM에 특별한 기능이 있습니다.
 
    > Any of your entities can have methods with custom logic that listen to specific entity events. You must mark those methods with special decorators depending on what event you want to listen to.
 
@@ -246,24 +246,39 @@ export class User {
   // ...
   @BeforeInsert()
   async hashPassword(): Promise<void> {
-    try {
-      this.password = await bcrypt.hash(this.password, 10);
-    } catch (e) {
-      console.log(e);
-      throw new InternalServerErrorException();
-    }
+    if (this.password)
+      // 사용자 정보를 update하는 것도 insert가 발동되기 때문.
+      try {
+        this.password = await bcrypt.hash(this.password, 10);
+      } catch (e) {
+        console.log(e);
+        throw new InternalServerErrorException();
+      }
   }
 }
 ```
 
+3. UserController - Sign up (회원가입)
+   TODO:
+
 ### NestJS Auth
 
 1. install Package
+   TODO:
 
-```sh
-$ npm install --save @nestjs/passport passport passport-local
-$ npm i --save-dev @types/passport
-```
+   ```sh
+   $ npm install --save jsonwebtoken
+   $ npm i --save-dev @types/jsonwebtoken
+   ```
+
+2. Auth Module
+   TODO:
+
+3. Auth Guard
+   TODO:
+
+4. UserController - Sign in (로그인))
+   TODO:
 
 ### Role-based Authorization
 
