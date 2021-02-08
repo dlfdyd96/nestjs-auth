@@ -380,13 +380,104 @@ export class UserController {
   $ npm i --save-dev @types/jsonwebtoken
   ```
 
-2. Auth Module
+2. Login 시 Token 발행 로직
+- JWT Module
+```ts
+// src/jwt/jwt.module.ts
+
+@Module({})
+@Global()
+export class JwtModule {
+  static forRoot(options: JwtModuleOptions): DynamicModule {
+    return {
+      module: JwtModule,
+      exports: [JwtService],
+      providers: [
+        {
+          provide: CONFIG_OPTIONS,
+          useValue: options,
+        },
+        JwtService,
+      ],
+    };
+  }
+}
+```
+
+- JWT Module Options **Depedency Injection**
+```ts
+// src/jwt/jwt.constant.ts
+export const CONFIG_OPTIONS = 'CONFIG_OPTIONS';
+
+
+// src/jwt/jwt.interface.ts
+export interface JwtModuleOptions {
+  privateKey: string;
+}
+```
+
+- JWT Service
+```ts
+// src/jwt/jwt.service.ts
+
+@Injectable()
+export class JwtService {
+  constructor(
+    @Inject(CONFIG_OPTIONS) private readonly options: JwtModuleOptions,
+  ) {}
+
+  // 로그인 성공하면 token을 만들어 보냄
+  sign(userId: string): string {
+    return jwt.sign({ id: userId }, this.options.privateKey);
+  }
+}
+```
+
+- User Service
+```ts
+// src/user/user.service.ts
+
+ async signIn({
+    username,
+    password,
+  }: SignInRequestDto): Promise<SignInResponseDto> {
+    try {
+      const user = await this.userRepository.findOne({ username });
+      if (!user) {
+        throw new NotFoundException({
+          error: 'Not Found',
+          message: ['사용자를 찾지 못했습니다.'],
+        });
+      }
+      const passwordCorrect = await user.checkPassword(password);
+      if (!passwordCorrect) {
+        throw new BadRequestException({
+          error: 'Bad Request',
+          message: ['비밀번호가 틀렸습니다.'],
+        });
+      }
+
+      const token = this.jwtService.sign(user.id);
+      return {
+        statusCode: 201,
+        token,
+      };
+    } catch (error) {
+      return {
+        statusCode: error.status,
+        ...error.response,
+      };
+    }
+  }
+```
+
+3. Auth Module
    TODO:
 
-3. Auth Guard
+4. Auth Guard
    TODO:
 
-4. UserController - Sign in (로그인))
+5. UserController - Sign in (로그인))
    TODO:
 
 ### Role-based Authorization

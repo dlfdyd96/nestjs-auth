@@ -15,7 +15,7 @@ export class UserController {
     return this.userService.signUp(data);
   }
 
-  @Post()
+  @Post('/sign-in')
   signIn(@Body() data: SignInRequestDto): Promise<SignInResponseDto> {
     return this.userService.signIn(data);
   }
