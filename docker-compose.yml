@@ -4,7 +4,7 @@ services:
   # webinar 계정과 webinar DB
   mysql:
     image: mysql:5.7
-    container_name: dev-mysql
+    container_name: ilyong-mysql
     restart: always
     ports:
       - 10310:3306
@@ -19,7 +19,7 @@ services:
       - --collation-server=utf8mb4_unicode_ci
       - --skip-character-set-client-handshake
     volumes:
-      - dev-mysql:/var/lib/mysql
+      - ilyong-mysql:/var/lib/mysql
 
 volumes:
-  dev-mysql:
+  ilyong-mysql:
