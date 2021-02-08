@@ -209,17 +209,61 @@ export class UserModule {}
 
 4. `npm run build` -> `npm run start` 또는 `npm run start:dev` script를 실행하면 database에 `users` Table이 생성된 것 을 확인할 수 있습니다.
 
-### (추가) TypeORM Migration
+### +) TypeORM Migration
 
 - `forRoot()`의 `synchronize: true`는 개발환경에서만 사용해야합니다.
 
   왜냐하면 `*.entity.ts`를 변경할때마다 변경사항들을 해당하는 Database Table에 바로 반영하기 때문에, 자칫하면 data를 잃어버릴 수도 있습니다.
 
-TODO: Migration 방법
+(TODO: Migration 방법)
 
 ## 3. NestJS
 
+JWT Role-based access control 을 만들어 봅시다. 그전에 user 를 만들기 전에, 비밀번호를 hashing 해줍시다.
+
+### Hashing Password Before User Insert
+
+1. Install Package
+
+```sh
+$ npm i bcrypt
+$ npm i --save-dev @types/bcrypt
+```
+
+2. User Entity
+
+   [TypeORM - Listeners and Subscribers](https://typeorm.io/#/listeners-and-subscribers/beforeinsert) 를 참고하시면
+
+   > Any of your entities can have methods with custom logic that listen to specific entity events. You must mark those methods with special decorators depending on what event you want to listen to.
+
+   모든 Entity들은 특정 entity event를 기다리고 있는 사용자 정의 로직 메서드를 가질 수 있습니다.
+
+   저는 `@BeforeInsert()` 라는 데코레이터를 사용하여, 사용자를 등록하여 DB에 Insert 되기 전, 비밀번호를 hashing 하는 작업을 해보도록 하겠습니다.
+
+```ts
+// ...
+export class User {
+  // ...
+  @BeforeInsert()
+  async hashPassword(): Promise<void> {
+    try {
+      this.password = await bcrypt.hash(this.password, 10);
+    } catch (e) {
+      console.log(e);
+      throw new InternalServerErrorException();
+    }
+  }
+}
+```
+
 ### NestJS Auth
+
+1. install Package
+
+```sh
+$ npm install --save @nestjs/passport passport passport-local
+$ npm i --save-dev @types/passport
+```
 
 ### Role-based Authorization
 
