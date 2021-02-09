@@ -264,8 +264,10 @@ export class User {
 ```
 
 3. UserController - Sign up (회원가입)
-회원가입을 위한 작업을 해봅시다.
+   회원가입을 위한 작업을 해봅시다.
+
 - 먼저 DTO를 만들어 봅시다.
+
 ```ts
 // src/common/common.dto.ts
 
@@ -273,7 +275,6 @@ export class CommonResponseDto {
   status: number;
   error?: string;
 }
-
 
 // src/user/dtos/create-user.dto.ts
 
@@ -294,9 +295,10 @@ export class CreateUserRequestDto {
 
 export class CreateUserResponseDto extends CommonResponseDto {}
 ```
-- 다음으로 `UserService`를 만들어 봅시다.
-```ts
 
+- 다음으로 `UserService`를 만들어 봅시다.
+
+```ts
 @Injectable()
 export class UserService {
   constructor(
@@ -331,6 +333,7 @@ export class UserService {
 ```
 
 - 다음으로 `UserController`를 만들어 봅시다.
+
 ```ts
 import { Body, Controller, Post } from '@nestjs/common';
 import {
@@ -350,6 +353,7 @@ export class UserController {
 ```
 
 4. Test
+
 ```json
 // [POST] localhost:3000/users
 // Request Body
@@ -375,13 +379,16 @@ export class UserController {
 ### NestJS Auth
 
 1. install Package
-  ```sh
-  $ npm install --save jsonwebtoken
-  $ npm i --save-dev @types/jsonwebtoken
-  ```
+
+```sh
+$ npm install --save jsonwebtoken
+$ npm i --save-dev @types/jsonwebtoken
+```
 
 2. Login 시 Token 발행 로직
+
 - JWT Module
+
 ```ts
 // src/jwt/jwt.module.ts
 
@@ -405,10 +412,10 @@ export class JwtModule {
 ```
 
 - JWT Module Options **Depedency Injection**
+
 ```ts
 // src/jwt/jwt.constant.ts
 export const CONFIG_OPTIONS = 'CONFIG_OPTIONS';
-
 
 // src/jwt/jwt.interface.ts
 export interface JwtModuleOptions {
@@ -417,6 +424,7 @@ export interface JwtModuleOptions {
 ```
 
 - JWT Service
+
 ```ts
 // src/jwt/jwt.service.ts
 
@@ -434,6 +442,7 @@ export class JwtService {
 ```
 
 - User Service
+
 ```ts
 // src/user/user.service.ts
 
@@ -471,14 +480,102 @@ export class JwtService {
   }
 ```
 
-3. Auth Module
-   TODO:
+3. Authentication
 
-4. Auth Guard
-   TODO:
+[GET] `/users/me` 를 호출하여 로그인된 자신의 사용자 정보를 얻어오는 end point를 만들어봅시다.
 
-5. UserController - Sign in (로그인))
-   TODO:
+- 토큰으로 부터 user 정보를 캐오는 Jwt Middleware를 생성
+
+```ts
+// src/jwt/jwt.middleware.ts
+
+@Injectable()
+export class JwtMiddleware implements NestMiddleware {
+  constructor(
+    private readonly userService: UserService,
+    private readonly jwtService: JwtService,
+  ) {}
+
+  async use(req: Request, res: Response, next: NextFunction) {
+    if ('x-jwt' in req.headers) {
+      const token = req.headers['x-jwt'];
+      const decoded = this.jwtService.verify(token.toString());
+      if (typeof decoded === 'object' && decoded.hasOwnProperty('id')) {
+        try {
+          const user = await this.userService.findById(decoded['id']);
+          req['user'] = user;
+        } catch (err) {
+          console.log(err);
+        }
+      }
+    }
+    next();
+  }
+}
+```
+
+- App Module에 JwtMiddleWare를 적용
+
+```ts
+// src/app.module.ts
+@Module({
+  // ...
+})
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(JwtMiddleware)
+      .forRoutes({ path: '/', method: RequestMethod.ALL });
+  }
+}
+```
+
+- 해당 End Point를 보호할 Auth Guard
+
+```ts
+// src/auth/auth.gaurd.ts
+@Injectable()
+export class AuthGuard implements CanActivate {
+  canActivate(
+    context: ExecutionContext,
+  ): boolean | Promise<boolean> | Observable<boolean> {
+    const request = context.switchToHttp().getRequest();
+    const user = request['user'];
+    if (!user) return false;
+    return true;
+  }
+}
+```
+
+- Custom Decorator를 사용하여 사용자 정보 반환
+
+```ts
+// src/auth/auth-user.decorator.ts
+export const AuthUser = createParamDecorator(
+  (data: unknown, context: ExecutionContext) => {
+    const request = context.switchToHttp().getRequest();
+    const user = request['user'];
+    return user;
+  },
+);
+```
+
+- `/users/me`에 적용
+
+```ts
+// src/user/user.controller.ts
+
+@Controller('users')
+export class UserController {
+  // ...
+
+  @Get('/me')
+  @UseGuards(AuthGuard)
+  getMe(@AuthUser() user: User): User {
+    return user;
+  }
+}
+```
 
 ### Role-based Authorization
 

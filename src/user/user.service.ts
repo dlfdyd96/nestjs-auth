@@ -75,4 +75,8 @@ export class UserService {
       };
     }
   }
+
+  async findById(id: string): Promise<User> {
+    return await this.userRepository.findOne(id);
+  }
 }
