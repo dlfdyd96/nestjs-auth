@@ -7,12 +7,12 @@
   - [ ] Authorization
   - [ ] 추가(TypeORM, Swagger)
 - Setup
-  - [ ] MySQL docker-compose
-  - [ ] TypeORM Setup
-  - [ ] User Entity Model
-  - [ ] TypeORM Migration
+  - [x] MySQL docker-compose
+  - [x] TypeORM Setup
+  - [x] User Entity Model
+  - [x] TypeORM Migration
 - NestJS
-  - [ ] NestJS Auth
+  - [x] NestJS Auth
   - [ ] Role-based Authorization
 - 추가
   - [ ] Custom Decorator
