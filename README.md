@@ -581,33 +581,97 @@ export class UserController {
 어드민, 매니저, 일반유저(Role)에 대해 Auth 범위를 지정해봅시다.
 
 - 먼저 `User Entity`의 Role 속성을 추가합니다.
-```ts
-// src/user/entity/user.entity.ts
+  ```ts
+  // src/user/entity/user.entity.ts
 
-export enum UserRole {
-  General = 'General',
-  Manager = 'Manager',
-  Admin = 'Admin',
-}
-
-// ...
-export class User {
-  // ...
-
-  @Column({ type: 'enum', enum: UserRole })
-  role: UserRole;
+  export enum UserRole {
+    General = 'General',
+    Manager = 'Manager',
+    Admin = 'Admin',
+  }
 
   // ...
-}
+  export class User {
+    // ...
 
-```
+    @Column({ type: 'enum', enum: UserRole })
+    role: UserRole;
 
-- Role-Based Authentication
-```ts
+    // ...
+  }
 
-```
+  ```
 
-- Endpoint에 대해서 `AuthGuard`를 적용해봅시다.
+- Guards 정의
+
+  ```ts
+  // src/auth/roles.guard.ts
+
+  import { SetMetadata } from '@nestjs/common';
+  import { UserRole } from 'src/user/entity/user.entity';
+
+  export type AllowedRoles = keyof typeof UserRole | 'Any'; // 'Any'는 모든 Role 허가
+
+  export const Role = (roles: AllowedRoles[]) => SetMetadata('roles', roles);
+  ```
+
+  ```ts
+  // src/auth/auth.guard.ts
+
+  @Injectable()
+  export class AuthGuard implements CanActivate {
+    constructor(private reflector: Reflector) {}
+    canActivate(
+      context: ExecutionContext,
+    ): boolean | Promise<boolean> | Observable<boolean> {
+      const requiredRoles = this.reflector.get<AllowedRoles>(
+        'roles',
+        context.getHandler(),
+      );
+      if (!requiredRoles) { // Guard가 필요없는 부분으로 생각하고 Guard를 Pass합니다.
+        return true;
+      }
+      console.log(requiredRoles);
+
+      const request = context.switchToHttp().getRequest();
+      const user: User = request['user'];
+      
+      if (!user) {
+        return false;
+      }
+      
+      if (requiredRoles.includes('Any')) {
+        return true;
+      }
+      return requiredRoles.includes(user.role);
+    }
+  }
+  ```
+
+- 필요한 End Point에 Guard 적용합니다.
+  ```ts
+  // src/user/user.controller.ts
+
+  export class UserController {
+    // ...
+
+    @Get('/me')
+    @Role(['Any'])
+    @UseGuards(AuthGuard)
+    getMe(@AuthUser() user: User): User {
+      return user;
+    }
+
+    @Get('/admin')
+    @Role(['Admin'])
+    @UseGuards(AuthGuard)
+    getAdminInfo(@AuthUser() user: User) {
+      return `Admin : ${user.username}`;
+    }
+  }
+  ```
+
+- RBAC는 `@UseGuards(AuthGuard)`와 `@Roles()`를 같이 사용해야하는데, AuthGuard를 global하게 적용하여 
   ```ts
   // src/auth/auth.module.ts
   import { Module } from '@nestjs/common';
@@ -626,11 +690,56 @@ export class User {
   ```
   - `@nestjs/core`의 `APP_GUARD`는 우리의 `AuthGuard`를 Global하게 만들 수 있습니다.
 
-- 모든 End point에서 Auth가 필요하지가 않죠. 그래서 저희는 그런부분은 anonymous로 metadata를 적용해줍니다.
+
+  ```ts
+  // src/user/user.controller.ts
+
+  export class UserController {
+    // ...
+
+    @Get('/me')
+    @Role(['Any'])
+    getMe(@AuthUser() user: User): User {
+      return user;
+    }
+
+    @Get('/admin')
+    @Role(['Admin'])
+    getAdminInfo(@AuthUser() user: User) {
+      return `Admin : ${user.username}`;
+    }
+  }
+  ```
 
 
 ## 4. 추가
 
+### Swagger
+- Installation
+```sh
+$ npm install --save @nestjs/swagger swagger-ui-express
+```
+- Swagger 적용
+```ts
+// src/main.ts
+
+
+async function bootstrap() {
+  // ...
+  const config = new DocumentBuilder()
+    .setTitle('Cats example')
+    .setDescription('The cats API description')
+    .setVersion('1.0')
+    .addTag('cats')
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document);
+  
+  await app.listen(3000);
+}
+bootstrap();
+```
+
+
 ### Custom Decorator
 
-### Swagger
