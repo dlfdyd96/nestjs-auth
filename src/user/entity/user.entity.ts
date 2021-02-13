@@ -10,7 +10,13 @@ import {
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { InternalServerErrorException } from '@nestjs/common';
-import { log } from 'console';
+
+export enum UserRole {
+  General = 'General',
+  Manager = 'Manager',
+  Admin = 'Admin',
+}
+
 @Entity({ name: 'users' })
 export class User {
   @PrimaryGeneratedColumn('uuid')
@@ -21,6 +27,9 @@ export class User {
 
   @Column()
   password: string;
+
+  @Column({ type: 'enum', enum: UserRole })
+  role: UserRole;
 
   @Column({ nullable: true })
   avatar: string;

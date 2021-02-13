@@ -1,6 +1,6 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { AuthUser } from 'src/auth/auth-user.decorator';
-import { AuthGuard } from 'src/auth/auth.guard';
+import { Role } from 'src/auth/roles.guard';
 import {
   CreateUserRequestDto,
   CreateUserResponseDto,
@@ -24,8 +24,16 @@ export class UserController {
   }
 
   @Get('/me')
-  @UseGuards(AuthGuard)
+  @Role(['Any'])
+  // @UseGuards(AuthGuard)
   getMe(@AuthUser() user: User): User {
     return user;
+  }
+
+  @Get('/admin')
+  @Role(['Admin'])
+  // @UseGuards(AuthGuard)
+  getAdminInfo(@AuthUser() user: User) {
+    return `Admin : ${user.username}`;
   }
 }

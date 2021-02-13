@@ -577,7 +577,57 @@ export class UserController {
 }
 ```
 
-### Role-based Authorization
+### Role-based Authorizationa
+어드민, 매니저, 일반유저(Role)에 대해 Auth 범위를 지정해봅시다.
+
+- 먼저 `User Entity`의 Role 속성을 추가합니다.
+```ts
+// src/user/entity/user.entity.ts
+
+export enum UserRole {
+  General = 'General',
+  Manager = 'Manager',
+  Admin = 'Admin',
+}
+
+// ...
+export class User {
+  // ...
+
+  @Column({ type: 'enum', enum: UserRole })
+  role: UserRole;
+
+  // ...
+}
+
+```
+
+- Role-Based Authentication
+```ts
+
+```
+
+- Endpoint에 대해서 `AuthGuard`를 적용해봅시다.
+  ```ts
+  // src/auth/auth.module.ts
+  import { Module } from '@nestjs/common';
+  import { APP_GUARD } from '@nestjs/core';
+  import { AuthGuard } from './auth.guard';
+
+  @Module({
+    providers: [
+      {
+        provide: APP_GUARD,
+        useClass: AuthGuard,
+      },
+    ],
+  })
+  export class AuthModule {}
+  ```
+  - `@nestjs/core`의 `APP_GUARD`는 우리의 `AuthGuard`를 Global하게 만들 수 있습니다.
+
+- 모든 End point에서 Auth가 필요하지가 않죠. 그래서 저희는 그런부분은 anonymous로 metadata를 적용해줍니다.
+
 
 ## 4. 추가
 
